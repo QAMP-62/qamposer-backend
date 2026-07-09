@@ -1,40 +1,43 @@
-[tool.poetry]
+[project]
 name = "backend"
 version = "0.1.0"
 description = ""
-authors = ["mi2valley <monocoin189@gmail.com>"]
+authors = [{ name = "mi2valley", email = "monocoin189@gmail.com" }]
 readme = "README.md"
-packages = [{ include = "backend", from = "src" }]
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "pydantic>=2.12.4,<3.0.0",
+    "fastapi[standard]>=0.121.1,<0.122.0",
+    "qiskit[qasm3-import]>=2.2.3,<3.0.0",
+    "uvicorn[standard]>=0.38.0,<0.39.0",
+    "python-jose[cryptography]>=3.5.0,<4.0.0",
+    "bcrypt==4.0.1",
+    "uuid-utils>=0.11.1,<0.12.0",
+    "passlib>=1.7.4,<2.0.0",
+    "gunicorn>=23.0.0,<24.0.0",
+    "pydantic-settings>=2.12.0,<3.0.0",
+    "qiskit-aer>=0.17.2,<0.18.0",
+    "qiskit-ibm-runtime>=0.44.0,<0.45.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.13"
-pydantic = "^2.12.4"
-fastapi = {extras = ["standard"], version = "^0.121.1"}
-qiskit = {extras = ["qasm3-import"], version = "^2.2.3"}
-uvicorn = {extras = ["standard"], version = "^0.38.0"}
-python-jose = {extras = ["cryptography"], version = "^3.5.0"}
-bcrypt = "4.0.1"
-uuid-utils = "^0.11.1"
-passlib = "^1.7.4"
-gunicorn = "^23.0.0"
-pydantic-settings = "^2.12.0"
-qiskit-aer = "^0.17.2"
-qiskit-ibm-runtime = "^0.44.0"
-
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.14.4"
-mypy = "^1.18.2"
-pre-commit = "^4.4.0"
-pytest = "^9.0.0"
-pyright = "^1.1.407"
-jupyter = "^1.1.1"
-matplotlib = "^3.10.7"
-pylatexenc = "^2.10"
+[dependency-groups]
+dev = [
+    "ruff>=0.14.4,<0.15.0",
+    "mypy>=1.18.2,<2.0.0",
+    "pre-commit>=4.4.0,<5.0.0",
+    "pytest>=9.0.0,<10.0.0",
+    "pyright>=1.1.407,<2.0.0",
+    "jupyter>=1.1.1,<2.0.0",
+    "matplotlib>=3.10.7,<4.0.0",
+    "pylatexenc>=2.10,<3.0.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/backend"]
 
 [tool.pyright]
 include = ["src"]

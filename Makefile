@@ -6,21 +6,22 @@ prepare:
 	cp .env.example .env
 
 run:
-	poetry run uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+	uv run uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 
 install:
-	poetry install
-	poetry run pre-commit install
+	uv sync
+	uv run pre-commit install
 
 update:
-	poetry update
-	poetry run pre-commit autoupdate
+	uv lock --upgrade
+	uv sync
+	uv run pre-commit autoupdate
 
 build:
-	poetry build
+	uv build
 
 test:
-	poetry run pytest ./tests -p no:warnings
+	uv run pytest ./tests -p no:warnings
 
 docker-build:
 	docker build . -t ${PROGRAM_NAME}

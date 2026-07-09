@@ -17,16 +17,16 @@ This backend provides the quantum simulation engine for Qamposer. While `qampose
 ## Requirements
 
 - Python 3.13+
-- Poetry
+- uv
 
 ## Quick Start
 
 ```bash
 # Install dependencies
-poetry install
+uv sync
 
 # Start the server
-poetry run uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 The API will be available at `http://localhost:8080`.
@@ -97,13 +97,13 @@ Key environment variables:
 
 ```bash
 # Run tests
-poetry run pytest
+uv run pytest
 
 # Lint
-poetry run ruff check .
+uv run ruff check .
 
 # Type check
-poetry run mypy src/
+uv run mypy src/
 ```
 
 ## Docker
