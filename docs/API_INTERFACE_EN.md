@@ -243,18 +243,83 @@ Version information.
 
 ## CORS Configuration
 
-qamposer-backend allows requests from the following origins:
+Allowed origins are set with the `ALLOWED_ORIGINS` environment variable (JSON list). The default allows `http://localhost:3000`, `http://localhost:4321`, `http://localhost:5173`, `https://qamp-62.github.io`, `https://qamposer.org` and `https://www.qamposer.org`. Credentials (cookies) are allowed for these origins.
 
-```python
-# Development environment
-origins = [
-    "http://localhost:3000",
-    "http://localhost:4321",
-    "http://localhost:5173",  # Vite default
-]
+---
+
+## Real Hardware (IBM Quantum)
+
+Bring-your-own-key access to IBM Quantum devices. All endpoints are under `/api/ibm` and return `Cache-Control: no-store`.
+
+- **Session cookie:** `POST /api/ibm/session` sets `__Host-qamposer_ibm` (`HttpOnly; Secure; SameSite=Strict; Path=/`). Browsers must send requests with credentials (`fetch(..., { credentials: 'include' })`), from a page on the same site as the API.
+- **CSRF:** `POST` and `DELETE` requests must carry an `Origin` header listed in `ALLOWED_ORIGINS`, otherwise `403`.
+- **Errors:** `{"detail": "<message safe to show>"}`. `401` = not connected (or the key was rejected), `404` = job not found, `409` = a job is already active / cannot be cancelled, `429` = rate limited, `502` / `504` = IBM Quantum failed / timed out. Validation errors (`422`) do not echo the input.
+
+### POST /api/ibm/session
+
+Connect with an IBM Cloud API key. The key is validated (no QPU time used), encrypted and kept for the session only.
+
+```typescript
+// Request
+{ api_key: string; instance?: string /* CRN or name */ }
+// Response 200 (+ Set-Cookie)
+{ connected: true; instance: string | null; expires_at: string /* ISO 8601 */ }
 ```
 
-Appropriate origins must be configured for production environment.
+### GET /api/ibm/session
+
+```typescript
+{ connected: boolean; instance: string | null; expires_at: string | null }
+```
+
+### DELETE /api/ibm/session
+
+Disconnect: deletes the stored key and clears the cookie. `204`.
+
+### GET /api/ibm/backends?min_qubits=N
+
+Operational devices available to the instance with at least `N` qubits, shortest queue first.
+
+```typescript
+Array<{ name: string; num_qubits: number; pending_jobs: number; operational: boolean }>
+```
+
+### GET /api/ibm/usage
+
+```typescript
+{ remaining_seconds: number | null; consumed_seconds: number | null; limit_reached: boolean }
+```
+
+### POST /api/ibm/jobs
+
+Submit a circuit (same gate format and limits as `/api/circuit/simulate`). It is transpiled to the device's native gates and layout (ISA) and run with SamplerV2. One active job per session; shots up to `IBM_MAX_SHOTS`.
+
+```typescript
+// Request
+{ qubits: number; gates: Gate[]; shots: number; backend_name: string }
+// Response 201
+Job
+```
+
+### GET /api/ibm/jobs/{id}
+
+```typescript
+interface Job {
+  id: string;
+  backend: string;
+  status: "queued" | "running" | "done" | "error" | "cancelled";
+  result: null | {
+    counts: Record<string, number>; // same bit order as the simulator
+    execution_time: number;         // QPU seconds (0 when unknown)
+    qsphere: QSpherePoint[] | null; // ideal statevector; null if the circuit is unknown to this session
+  };
+  error: string | null;
+}
+```
+
+### DELETE /api/ibm/jobs/{id}
+
+Cancel a queued or running job. `204`.
 
 ---
 
@@ -269,4 +334,4 @@ Appropriate origins must be configured for production environment.
 
 ---
 
-_Last updated: 2026-01-22_
+_Last updated: 2026-10-06_

@@ -1,4 +1,4 @@
-from logging import ERROR, getLogger
+from logging import ERROR, WARNING, getLogger
 from logging.config import dictConfig
 
 from backend.config import DEBUG_MODE
@@ -17,8 +17,10 @@ logging_config = {
             "level": "DEBUG",
             "formatter": "consoleFormatter",
             "stream": "ext://sys.stdout",
+            "filters": ["redact"],
         }
     },
+    "filters": {"redact": {"()": "backend.util.redact.RedactingFilter"}},
     "formatters": {
         "consoleFormatter": {
             "format": LOG_FORMAT,
@@ -35,3 +37,6 @@ def init() -> None:
     logger.info(f"LOG LEVEL: {LOG_LEVEL}")
     logger.debug("TEST DEBUG MESSAGE")
     getLogger("passlib").setLevel(ERROR)
+    # These can log request details (URLs, headers) that include credentials at lower levels
+    for name in ("qiskit_ibm_runtime", "urllib3", "requests", "ibm_cloud_sdk_core"):
+        getLogger(name).setLevel(WARNING)

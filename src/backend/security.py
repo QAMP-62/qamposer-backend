@@ -7,7 +7,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field
 
-from backend.const import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, HASHED_PASSWORD, SECRET_KEY, USER
+from backend.config import get_settings
+from backend.const import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM
 
 oauth2_password = OAuth2PasswordBearer(tokenUrl="token", scopes={})
 
@@ -42,18 +43,33 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
+def _signing_key() -> str:
+    key = get_settings().jwt_secret_key
+    if key is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Password login is not configured",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return key.get_secret_value()
+
+
 def authenticate_user(username: str, password: str) -> bool:
-    return username == USER and verify_password(password, HASHED_PASSWORD)
+    settings = get_settings()
+    if not settings.password_login_enabled:
+        return False
+    assert settings.auth_password_hash is not None
+    return username == settings.auth_user and verify_password(password, settings.auth_password_hash.get_secret_value())
 
 
 def create_access_token(username: str) -> str:
     expires = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    return jwt.encode({"sub": username, "exp": expires}, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode({"sub": username, "exp": expires}, _signing_key(), algorithm=ALGORITHM)
 
 
 def validate_token(token: str) -> str:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, _signing_key(), algorithms=[ALGORITHM])
         username: Optional[str] = payload.get("sub")
         if not username:
             raise ValueError("Token payload missing 'sub'")

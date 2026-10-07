@@ -24,13 +24,7 @@ TAG_SECURITY = "Security"
 
 
 # security
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 5
-SECRET_KEY = "thaL3ha5uPhoo8ooTheigh6Boohaip4UZoh6zah1Hee9GierKeeX3einaethei9I"  # TODO: Replace to your random value
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 4
-
-# pre-defined user
-USER = "my_user"  # TODO: Replace to your random value
-
-# TODO: Replace to your random value using '/src/notebooks/password.ipynb'. Current is hash of 'my_password'
-HASHED_PASSWORD = "$2b$12$BfGx1OmuCya9aHRA9UflQeLvJQkDllOaIvulURK45zWehUUzaAh5a"
+# Credentials (JWT signing key, user, password hash) come from the environment:
+# see backend.config.Settings and .env.example.
